@@ -8,7 +8,6 @@ This application processes wind turbine data to:
 
 - Calculate power output based on meteorological conditions
 - Apply blanket corrections for seasonal factors
-- Compare calculated results with real power data
 - Generate corrected power output files
 
 ## Features
@@ -17,7 +16,6 @@ This application processes wind turbine data to:
 - **Error Handling**: Comprehensive error handling and logging
 - **Configuration Management**: External configuration file for easy customization
 - **Flexible Processing**: Support for different turbines, years, and parameters
-- **Data Validation**: Automatic file discovery and validation
 
 ## Project Structure
 
@@ -30,9 +28,6 @@ correcting/
 ├── roughness.py           # Surface roughness calculations
 ├── power_output.py        # Power output calculations
 ├── write_data.py          # Data writing functions
-├── correcting.py          # Power correction algorithms
-├── wind_turbines_action.py # Turbine data management
-├── show_graphs.py         # Visualization functions
 ├── README.md              # This file
 └── __init__.py            # Package initialization
 ```
@@ -139,7 +134,6 @@ CSV files containing actual power output data for comparison and correction.
 3. **Power Calculation**: Calculate theoretical power output
 4. **Blanket Corrections**: Apply seasonal corrections
 5. **Speed Analysis**: Analyze power output at different wind speeds
-6. **Real Data Comparison**: Compare with actual power data
 7. **Results Writing**: Save corrected power output files
 
 ## Error Handling
