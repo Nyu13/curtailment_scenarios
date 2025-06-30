@@ -59,13 +59,13 @@ class WindTurbineProcessor:
             
             turbine_name = wind_turbines_pattern.loc[index, 'Asset Name']
             station_name = wind_turbines_pattern.loc[index, 'Nearby_Station']
-            curva_name = wind_turbines_pattern.loc[index, 'Model']
+            curve_name = wind_turbines_pattern.loc[index, 'Model']
             
             logger.info(f"Loaded turbine: {turbine_name}")
             logger.info(f"Station: {station_name}")
-            logger.info(f"Curve: {curva_name}")
+            logger.info(f"Curve: {curve_name}")
             
-            return turbine_name, station_name, curva_name, wind_turbines_pattern
+            return turbine_name, station_name, curve_name, wind_turbines_pattern
             
         except Exception as e:
             logger.error(f"Failed to load turbine data: {e}")
@@ -113,7 +113,7 @@ class WindTurbineProcessor:
         
         return metdata
         
-    def process_turbine(self, turbine_name, station_name, curva_name, year, wind_turbines_pattern):
+    def process_turbine(self, turbine_name, station_name, curve_name, year, wind_turbines_pattern):
         """Process a single turbine."""
         try:
             # Find input files
@@ -126,7 +126,7 @@ class WindTurbineProcessor:
 
             # Read input data
             hub_height, number_of_turbines, capacity, power_curve, metdata = input.read_data(
-                wind_turbines_pattern, self.power_curve_dir, curva_name, turbine_name, 
+                wind_turbines_pattern, self.power_curve_dir, curve_name, turbine_name, 
                 year, self.directories['input'], file_to_work
             )
             
@@ -198,11 +198,11 @@ class WindTurbineProcessor:
         
         try:
             # Load turbine data
-            turbine_name, station_name, curva_name, wind_turbines_pattern = self.load_turbine_data(turbine_index)
+            turbine_name, station_name, curve_name, wind_turbines_pattern = self.load_turbine_data(turbine_index)
             
             # Process the turbine
             continue_processing = self.process_turbine(
-                turbine_name, station_name, curva_name, year, wind_turbines_pattern
+                turbine_name, station_name, curve_name, year, wind_turbines_pattern
             )
             
             if not continue_processing:
