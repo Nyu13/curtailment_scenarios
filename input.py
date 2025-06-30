@@ -37,7 +37,7 @@ def read_file(directory: str, filename: str) -> pd.DataFrame:
 
 
 def read_data(wind_turbines: pd.DataFrame, power_curve_dir: str, 
-              curva_name: str, turbine_name: str, year: str, 
+              curve_name: str, turbine_name: str, year: str, 
               dir_input: str, file_to_work: str):
     """
     Read and extract all required data for turbine processing.
@@ -45,7 +45,7 @@ def read_data(wind_turbines: pd.DataFrame, power_curve_dir: str,
     Args:
         wind_turbines: DataFrame containing turbine configuration
         power_curve_dir: Directory containing power curve files
-        curva_name: Name of the power curve file (without extension)
+        curve_name: Name of the power curve file (without extension)
         turbine_name: Name of the turbine to process
         year: Year of data
         dir_input: Directory containing meteorological data
@@ -71,7 +71,7 @@ def read_data(wind_turbines: pd.DataFrame, power_curve_dir: str,
         capacity = capacity_MW * 1000  # Convert to kW
         
         # Load power curve
-        power_curve_path = Path(power_curve_dir) / f"{curva_name}.txt"
+        power_curve_path = Path(power_curve_dir) / f"{curve_name}.txt"
         if not power_curve_path.exists():
             raise FileNotFoundError(f"Power curve file not found: {power_curve_path}")
         
