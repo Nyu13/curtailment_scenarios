@@ -71,35 +71,6 @@ def write_power_output(power_df: pd.DataFrame, dir_out: str, turbine_name: str, 
         raise
 
 
-def write_seasonal_comparison(comparison_df: pd.DataFrame, dir_out: str, 
-                            turbine_name: str, year: str) -> None:
-    """
-    Write seasonal comparison DataFrame to CSV file.
-    
-    Args:
-        comparison_df: DataFrame containing seasonal comparison data
-        dir_out: Output directory path
-        turbine_name: Name of the turbine
-        year: Year of data
-    """
-    try:
-        # Ensure output directory exists
-        output_dir = Path(dir_out)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create filename
-        filename = f"{turbine_name}_{year}_seasonal_comparison.csv"
-        file_path = output_dir / filename
-        
-        # Write DataFrame to CSV
-        comparison_df.to_csv(file_path, index=True)
-        
-        logger.info(f"Successfully wrote seasonal comparison to: {file_path}")
-        
-    except Exception as e:
-        logger.error(f"Error writing seasonal comparison for turbine {turbine_name}: {e}")
-        raise
-
 
 def backup_file(file_path: str, backup_suffix: str = "_backup") -> str:
     """
