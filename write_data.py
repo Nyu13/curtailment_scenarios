@@ -53,15 +53,12 @@ def write_backcalc(df: pd.DataFrame, dir_out: str,
         output_dir = Path(dir_out)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-<<<<<<< HEAD
-=======
         # fname = f"{turbine_name}_{year}_power_backcalc_3.csv"
         fname = f"{turbine_name}_{year}_power_backcalc.csv"
         df.to_csv(output_dir / fname, index=False)
         logger.info(f"Back-calc file written: {output_dir / fname}")
     except Exception as exc:
         logger.error(f"Failed writing back-calc CSV: {exc}")
->>>>>>> dbdf73b (Update scripts and add new file)
 
 
 def backup_file(file_path: str, backup_suffix: str = "_backup") -> str:
