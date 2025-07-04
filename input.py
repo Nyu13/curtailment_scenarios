@@ -124,4 +124,6 @@ def read_sun_time(sunrise_sunset_file: str, year: str, turbine_name: str) -> pd.
         logger.error(f"Error reading sun time data for turbine {turbine_name}: {e}")
         raise
 
+def read_real_power_data(dirreal, file_name):
 
+    return pd.read_csv(os.path.join(dirreal, file_name))

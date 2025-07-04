@@ -5,6 +5,7 @@ Blanket correction calculations for wind turbine power output.
 from datetime import timedelta, datetime
 import pandas as pd
 import logging
+from config import PROCESSING_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +44,10 @@ def blanket_extract(df: pd.DataFrame, start_date: str, end_date: str, year_now: 
         df_intime.loc[:, 'set'] = pd.to_datetime(df_intime['date'].astype(str) + ' ' + df_intime['set'])
         
         # Calculate work time boundaries (1 hour after rise, 1 hour before set)
-        # df_intime['1_hour_after_rise'] = df_intime['rise'] + timedelta(hours=1)
-        # df_intime['1_hour_before_set'] = df_intime['set'] - timedelta(hours=1)
-        df_intime['1_hour_after_rise'] = df_intime['rise']
-        df_intime['1_hour_before_set'] = df_intime['set']
+        df_intime['1_hour_after_rise'] = df_intime['rise'] + timedelta(hours=1)
+        df_intime['1_hour_before_set'] = df_intime['set'] - timedelta(hours=1)
+        # df_intime['1_hour_after_rise'] = df_intime['rise']
+        # df_intime['1_hour_before_set'] = df_intime['set']
         
         logger.info(f"Extracted blanket data for {len(df_intime)} days from {start_date} to {end_date}")
         return df_intime
@@ -120,8 +121,7 @@ def win_speed_work(row: pd.Series, speed: list) -> pd.Series:
         logger.error(f"Error applying wind speed work restrictions: {e}")
         return row
 
-
-def datework_row(row: pd.Series, start_date: str = '08-01', end_date: str = '09-10', 
+def datework_row(row: pd.Series, start_date: str = PROCESSING_CONFIG['blanket_start_date'], end_date: str = PROCESSING_CONFIG['blanket_end_date'], 
                 year: int = 2024, speed: list = None, df_blanket: pd.DataFrame = None) -> pd.Series:
     """
     Apply date-based work restrictions to a data row.

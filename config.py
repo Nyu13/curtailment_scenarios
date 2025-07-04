@@ -24,12 +24,12 @@ WIND_SPEEDS = [5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0]
 
 # Processing parameters
 PROCESSING_CONFIG = {
-    'default_turbine_index': 28,
-    'default_year': '2023',
-    'blanket_start_date': '08-01',
-    'blanket_end_date': '09-10',
-    # 'blanket_start_date': '07-15',
-    # 'blanket_end_date': '09-30',
+    'default_turbine_index': 0,
+    'default_year': '2020',
+    # 'blanket_start_date': '08-01',
+    # 'blanket_end_date': '09-10',
+    'blanket_start_date': '07-15',
+    'blanket_end_date': '09-30',
     'wind_speed_conversion': 0.27778  # km/h to m/s conversion factor
 }
 

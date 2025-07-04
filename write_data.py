@@ -10,7 +10,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def write_speed(speed_res_df: pd.DataFrame, dir_out: str, turbine_name: str, year: str) -> None:
+def write_power(speed_res_df: pd.DataFrame, dir_out: str, turbine_name: str, year: str) -> None:
     """
     Write speed results DataFrame to CSV file.
     
@@ -26,7 +26,8 @@ def write_speed(speed_res_df: pd.DataFrame, dir_out: str, turbine_name: str, yea
         output_dir.mkdir(parents=True, exist_ok=True)
         
         # Create filename
-        filename = f"{turbine_name}_{year}_power_output_new3.csv"
+        # filename = f"{turbine_name}_{year}_power_output_new_3.csv"
+        filename = f"{turbine_name}_{year}_power_output_new.csv"
         file_path = output_dir / filename
         
         # Write DataFrame to CSV
@@ -42,34 +43,25 @@ def write_speed(speed_res_df: pd.DataFrame, dir_out: str, turbine_name: str, yea
 
 
 
-def write_power_output(power_df: pd.DataFrame, dir_out: str, turbine_name: str, year: str) -> None:
+def write_backcalc(df: pd.DataFrame, dir_out: str,
+                   turbine_name: str, year: str) -> None:
     """
-    Write power output DataFrame to CSV file.
-    
-    Args:
-        power_df: DataFrame containing power output data
-        dir_out: Output directory path
-        turbine_name: Name of the turbine
-        year: Year of data
+    Writes the combined forward / backward-calc results.
+    Output file ends with _power_backcalc.csv
     """
     try:
-        # Ensure output directory exists
         output_dir = Path(dir_out)
         output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create filename
-        filename = f"{turbine_name}_{year}_power_output.csv"
-        file_path = output_dir / filename
-        
-        # Write DataFrame to CSV
-        power_df.to_csv(file_path, index=False)
-        
-        logger.info(f"Successfully wrote power output to: {file_path}")
-        
-    except Exception as e:
-        logger.error(f"Error writing power output for turbine {turbine_name}: {e}")
-        raise
 
+<<<<<<< HEAD
+=======
+        # fname = f"{turbine_name}_{year}_power_backcalc_3.csv"
+        fname = f"{turbine_name}_{year}_power_backcalc.csv"
+        df.to_csv(output_dir / fname, index=False)
+        logger.info(f"Back-calc file written: {output_dir / fname}")
+    except Exception as exc:
+        logger.error(f"Failed writing back-calc CSV: {exc}")
+>>>>>>> dbdf73b (Update scripts and add new file)
 
 
 def backup_file(file_path: str, backup_suffix: str = "_backup") -> str:

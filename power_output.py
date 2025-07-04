@@ -5,13 +5,14 @@ Power output calculations for wind turbines.
 import scipy.interpolate as interp
 import pandas as pd
 import numpy as np
+from config import PHYSICAL_CONSTANTS
 import logging
 
 logger = logging.getLogger(__name__)
 
 # Physical constants
-RHO_STD = 1.225  # Standard air density (kg/m³)
-R = 287.05       # Gas constant (J/(kg·K))
+R        = PHYSICAL_CONSTANTS['R']
+rho_std  = PHYSICAL_CONSTANTS['rho_std']
 
 
 def wind_speed_at_hub_height(wind_speed: float, hub_height: float, 
@@ -67,22 +68,22 @@ def calculate_air_density(surface_pressure: float, temperature: float) -> float:
         
         # Convert temperature to Kelvin and calculate density
         temperature_kelvin = temperature + 273.15
-        air_density = surface_pressure / (R * temperature_kelvin)
+        air_density = (surface_pressure * 1000) / (R * temperature_kelvin)
         
         return air_density
         
     except Exception as e:
         logger.error(f"Error calculating air density: {e}")
-        return RHO_STD
+        return rho_std
 
 
-def power_output(wind_speed_hub: float, air_density: float, 
+def power_output(W_hub: float, air_density: float, 
                 power_curve: np.ndarray, losses: float) -> tuple:
     """
     Calculate power output using power curve and air density correction.
     
     Args:
-        wind_speed_hub: Wind speed at hub height (m/s)
+        W_hub: Wind speed at hub height (m/s)
         air_density: Air density (kg/m³)
         power_curve: Power curve data as numpy array (wind speed, power)
         losses: Power losses as fraction (0-1)
@@ -92,7 +93,7 @@ def power_output(wind_speed_hub: float, air_density: float,
     """
     try:
         # Air density adjustment factor
-        adjustment_factor = (air_density / RHO_STD) ** (1.0 / 3)
+        adjustment_factor = (air_density / rho_std) ** (1.0 / 3)
         
         # Create interpolation function for power curve
         if power_curve.shape[1] < 2:
@@ -111,7 +112,7 @@ def power_output(wind_speed_hub: float, air_density: float,
         )
         
         # Calculate power with density adjustment
-        adjusted_wind_speed = wind_speed_hub * adjustment_factor
+        adjusted_wind_speed = W_hub * adjustment_factor
         power = power_interp(adjusted_wind_speed) * (1 - losses)
         
         return float(power), adjustment_factor
@@ -147,17 +148,17 @@ def get_power_output(temperature: pd.Series, wind_speed: pd.Series,
         for i in range(len(temperature)):
             try:
                 # Calculate wind speed at hub height
-                wind_speed_hub = wind_speed_at_hub_height(
+                W_hub = wind_speed_at_hub_height(
                     wind_speed.iloc[i], hub_height, 
                     surface_roughness.iloc[i], ref_height
                 )
                 
                 # Use standard air density (can be enhanced with pressure data)
-                air_density = RHO_STD
+                air_density = rho_std
                 
                 # Calculate power output
-                power_out, adj_factor = power_output(
-                    wind_speed_hub, air_density, power_curve, losses
+                power_out, adjustment_factor = power_output(
+                    W_hub, air_density, power_curve, losses
                 )
                 
                 # Store results
@@ -166,7 +167,7 @@ def get_power_output(temperature: pd.Series, wind_speed: pd.Series,
                     'temp': temperature.iloc[i],
                     'precip': metdata['Precip. Amount (mm)'].iloc[i],
                     'WindSp': wind_speed.iloc[i],
-                    'W_hub': wind_speed_hub,
+                    'W_hub': W_hub,
                     'power_out': power_out
                 }
                 results.append(result)

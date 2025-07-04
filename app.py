@@ -14,6 +14,7 @@ import blanket
 import roughness
 import power_output
 import write_data
+import backward_calc
 
 # Configure logging
 logging.basicConfig(
@@ -92,16 +93,10 @@ class WindTurbineProcessor:
             raise FileNotFoundError(f"No input file found for station {station_name} and year {year}")
             
     def find_real_data_file(self, turbine_name, year):
-        """Find the real power data file."""
-        file_list = [f for f in os.listdir(self.directories['real']) 
-                    if os.path.isfile(os.path.join(self.directories['real'], f))]
-        
-        filtered_files = [f for f in file_list if year in f and turbine_name in f]
-        
-        if not filtered_files:
-            raise FileNotFoundError(f"No real data file found for turbine {turbine_name} and year {year}")
-            
-        return filtered_files[0]
+        files = [f for f in os.listdir(self.directories["real"]) if year in f and turbine_name in f]
+        if not files:
+            raise FileNotFoundError(f"No real data file for {turbine_name}, {year}")
+        return files[0]
         
     def process_meteorological_data(self, metdata):
         """Process and prepare meteorological data."""
@@ -130,9 +125,16 @@ class WindTurbineProcessor:
                 year, self.directories['input'], file_to_work
             )
             
-            # Read sun times
-            sunrise_sunset_file = os.path.join(self.directories['supply'], self.file_patterns['sunrise_sunset_file'])
-            sun_times = input.read_sun_time(sunrise_sunset_file, year, turbine_name)
+            real_df = input.read_real_power_data(self.directories["real"], file_real)
+            real_df['Volume'] *=1000 # MW → kW
+            real_df["time"] = pd.to_datetime(real_df["Date (MST)"])
+            real_df = real_df[["time", "Volume"]]
+
+            # ---------- merge met & power on timestamp
+            metdata = self.process_meteorological_data(metdata)
+            metdata = metdata.merge(
+            real_df, left_on="Date/Time (LST)", right_on="time", how="left")
+
             
             # Process meteorological data
             metdata = self.process_meteorological_data(metdata)
@@ -148,13 +150,18 @@ class WindTurbineProcessor:
             # Calculate power output
             wind_speed = metdata['Wind Spd (m/s)']
             temperature = metdata['Temp (°C)']
+            surface_pressure = metdata['Stn Press (kPa)']
             roughness_values = metdata['Roughness']
             
             df_power_out = power_output.get_power_output(
                 temperature, wind_speed, hub_height, roughness_values,
                 self.constants['ref_height'], power_curve, self.constants['losses'], metdata
             )
-            
+
+            # Read sun times
+            sunrise_sunset_file = os.path.join(self.directories['supply'], self.file_patterns['sunrise_sunset_file'])
+            sun_times = input.read_sun_time(sunrise_sunset_file, year, turbine_name)            
+
             # Apply blanket corrections
             start_date = self.processing_config['blanket_start_date']
             end_date = self.processing_config['blanket_end_date']
@@ -177,9 +184,62 @@ class WindTurbineProcessor:
             
             speed_results_df = pd.DataFrame(speed_results)
             
+            # ───────── BACK-CALCULATE HUB-HEIGHT WIND SPEED ─────────
+            # Site air density ρ_site  [kg m-3]
+            air_density = backward_calc.calculate_air_density(
+                metdata["Stn Press (kPa)"],      # kPa → Pa 
+                metdata["Temp (°C)"]             # air temperature in °C
+            )
+
+            # Per-turbine real power  [kW]
+            per_turbine_kw = metdata["Volume"] / number_of_turbines
+
+            # Invert power curve → W_hub_backcalc  [m s-1]
+            W_hub_backcalc = backward_calc.calc_wind_speed_from_power(
+                per_turbine_kw,
+                power_curve,
+                air_density,
+                losses=0.0                        # we don't use losses
+            )
+
+            # Pack into its own DataFrame
+            df_backcalc = pd.DataFrame({
+                "time":   metdata["Date/Time (LST)"],
+                "temp":   metdata["Temp (°C)"],
+                "precip": metdata["Precip. Amount (mm)"],
+                "W_hub": W_hub_backcalc,
+                "power_out": per_turbine_kw
+
+                
+            })
+
+            df_backcalc, df_blanket = blanket.stop_work_time(df_backcalc, df_blanket)
             
-            # wind_turbines_action.update_win_corrected(wind_turbines, turbine_data, year)
-            write_data.write_speed(speed_results_df, self.directories['input'], turbine_name, year)
+            # Initialize blanket and smart columns
+            for speed in self.constants['wind_speeds']:
+                df_backcalc[f'blanket_{speed}'] = df_backcalc['power_out']
+                df_backcalc[f'smart_{speed}'] = df_backcalc['power_out']
+
+            # Calculate speed results
+            speed_results_b = []
+            for _, row in df_backcalc.iterrows():
+                result = blanket.datework_row(
+                    row, start_date, end_date, year, 
+                    self.constants['wind_speeds'], df_blanket
+                )
+                speed_results_b.append(result)
+            
+            speed_backcalc_df = pd.DataFrame(speed_results_b)
+            # Write the back-calc CSV
+            write_data.write_backcalc(
+                speed_backcalc_df,
+                self.directories["output"],
+                turbine_name,
+                year
+            )
+           
+            
+            write_data.write_power(speed_results_df, self.directories['output'], turbine_name, year)
             
             logger.info(f"Successfully processed turbine {turbine_name}")
             return False  # Stop processing
